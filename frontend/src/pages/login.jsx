@@ -1,15 +1,50 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { appContext } from '../contexts/appContex';
+import { useContext } from 'react';
+import { useEffect } from 'react';
 
 const Login = () => {
     const navigate = useNavigate()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const { loged, setLoged } = useContext(appContext)
+
+    useEffect(()=>{
+        if(localStorage.getItem('id')){
+            navigate('/')
+        }
+    },[])
 
     const handleSubmit = (e) => {
         e.preventDefault();
         // Handle login logic here
-        console.log({ email, password });
+        if (!email || !password) {
+            toast.error("Please Prvide all the fiels")
+        } else {
+            fetch('http://localhost:3000/singlog/login', {
+                method: "POST",
+                headers: {
+                    'Content-Type': "Application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            }).then(res => res.json()).then(result => {
+                if (result.error) {
+                    toast.error(result.error)
+                } else {
+                    toast.success("Successfully loged in")
+                    localStorage.setItem('id', result.id)
+                    localStorage.setItem('jwt', result.token)
+                    console.log(loged)
+                    setLoged(true)
+                    navigate('/')
+                }
+            })
+        }
     };
 
     const signUpNav = () => {

@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Signup = () => {
 
-    const navigate=useNavigate()
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        if (localStorage.getItem('id')) {
+            navigate('/')
+        }
+    }, []);
 
     const [form, setForm] = useState({
         name: '',
         email: '',
         password: '',
         confirmPassword: '',
+        mobile: ''
     });
 
     const handleChange = (e) => {
@@ -18,17 +27,38 @@ const Signup = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        if (form.password !== form.confirmPassword) {
-            alert('Passwords do not match!');
+        if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+            toast.error("Please enter all data")
+            return;
+        }
+        else if (form.password !== form.confirmPassword) {
+            toast.error('Passwords do not match!');
             return;
         }
 
-        // Handle signup logic here
-        console.log('Signup data:', form);
+        fetch('http://localhost:3000/singlog/sinup', {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: form.name,
+                email: form.email,
+                password: form.password,
+                mobile: form.mobile
+            })
+        }).then(res => res.json()).then(result => {
+            if (result.error) {
+                toast.error(result.error)
+            } else {
+                toast.success(result)
+                navigate('/login')
+            }
+        })
+
     };
 
-    const lognNavigate=()=>{
+    const lognNavigate = () => {
         navigate('/login')
     }
 
@@ -71,6 +101,18 @@ const Signup = () => {
                         />
                     </div>
                     <div>
+                        <label className="block mb-1 text-sm font-medium text-gray-700">Mobile</label>
+                        <input
+                            type="number"
+                            name="mobile"
+                            value={form.mobile}
+                            onChange={handleChange}
+                            required
+                            placeholder='Enter Mobile Number'
+                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        />
+                    </div>
+                    <div>
                         <label className="block mb-1 text-sm font-medium text-gray-700">Confirm Password</label>
                         <input
                             type="password"
@@ -88,7 +130,7 @@ const Signup = () => {
                         Sign Up
                     </button>
                 </form>
-                <p onClick={()=>lognNavigate()} className="mt-4 cursor-pointer text-sm text-center text-gray-600 hover:underline hover:text-blue-600">
+                <p onClick={() => lognNavigate()} className="mt-4 cursor-pointer text-sm text-center text-gray-600 hover:underline hover:text-blue-600">
                     Already have an account? Login instead.
                 </p>
             </div>
